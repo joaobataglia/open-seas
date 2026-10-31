@@ -19,12 +19,23 @@ Next steps: `TODO.md`.
 - Everything is data in `common/src/main/resources/data/`. It overrides `minecraft:overworld/continents`, the one
   value that both the terrain shape splines (offset/factor/jaggedness) and biome placement read, so biomes and coasts
   stay consistent and biome mods (TerraBlender etc.) keep working.
-- `continents = clamp(-1, 1, island_shape + spline(archipelago_mask))`
-  - `openseas:island_shape`: island outlines. firstOctave -8 (features about half vanilla's continent size), coarse
-    octaves weighted up and fine ones down so islands come out chunky, not lacy.
-  - `openseas:archipelago` → `archipelago_mask`: very slow regional noise; the spline maps it to a bias from -0.85
-    (open sea) to +0.12 (large landmass), so the land threshold varies across the world and island sizes vary with it.
+- `continents = clamp(-1, 1, island_shape(warped) + spline(archipelago_mask) + islets * spline(islet_mask)
+  + spline(big_island_mask))`
+  - `openseas:island_shape`: island outlines, sampled at xz_scale 0.18. Coarse octaves weighted up so islands come out
+    chunky, not lacy. The bias keeps the threshold high (~-0.78), so only noise peaks become land: islands stay
+    separate and typically 1-2km long instead of chaining into continents.
+  - `warp_x`/`warp_z`: domain warp (vanilla shift + noise * 100) fed to island_shape and big_island_mask as shifts.
+    Without it, high-threshold peaks come out as round blobs.
+  - `openseas:archipelago` → `archipelago_mask`: slow regional noise. Nearly flat bias except its low tail, which
+    opens up empty sea. Keep it flat: a wide bias range clumps islands into dense patches.
+  - `openseas:islets` × spline(`islet_mask`): fine noise. Gate floor 0.25 everywhere gives coastline detail and rocks;
+    up to 0.8 in islet regions gives archipelagos of small islands.
+  - `big_island_mask` spline: adds up to +0.6 in the top ~10% of a slow noise, so rare 2-3km+ islands form as one body
+    rather than as merged neighbours.
+  - Splines extend linearly past their end points: gate/dome splines need derivative 0 at both ends, or they go
+    negative outside their range.
   - The clamp at -1 keeps values above the mushroom fields band (< -1.05).
+  - Preview targets (per 16x16km): ~16% land, ~27 islands 1-2km long, ~8 over 2km, max ~3-5km.
 - Vanilla continentalness bands: mushroom < -1.05 < deep ocean < -0.455 < ocean < -0.19 < coast < -0.11 < near inland
   < 0.03 < mid inland < 0.3 < far inland.
 - Only the Default (and Amplified) presets read `minecraft:overworld/continents`; Large Biomes has its own file.

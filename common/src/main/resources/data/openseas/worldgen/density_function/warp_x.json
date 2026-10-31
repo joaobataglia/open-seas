@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:flat_cache",
+  "argument": {
+    "type": "minecraft:add",
+    "argument1": "minecraft:shift_x",
+    "argument2": {
+      "type": "minecraft:mul",
+      "argument1": {
+        "type": "minecraft:noise",
+        "noise": "openseas:warp_x",
+        "xz_scale": 0.25,
+        "y_scale": 0.0
+      },
+      "argument2": 100.0
+    }
+  }
+}

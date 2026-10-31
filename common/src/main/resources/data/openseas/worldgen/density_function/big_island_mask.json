@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:shifted_noise",
+  "noise": "openseas:big_islands",
+  "shift_x": "openseas:warp_x",
+  "shift_y": 0.0,
+  "shift_z": "openseas:warp_z",
+  "xz_scale": 0.25,
+  "y_scale": 0.0
+}
