@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:flat_cache",
+  "argument": {
+    "type": "minecraft:clamp",
+    "min": -1.0,
+    "max": 1.0,
+    "input": {
+      "type": "minecraft:add",
+      "argument1": {
+        "type": "minecraft:shifted_noise",
+        "noise": "openseas:island_shape",
+        "shift_x": "minecraft:shift_x",
+        "shift_y": 0.0,
+        "shift_z": "minecraft:shift_z",
+        "xz_scale": 0.25,
+        "y_scale": 0.0
+      },
+      "argument2": {
+        "type": "minecraft:spline",
+        "spline": {
+          "coordinate": "openseas:archipelago_mask",
+          "points": [
+            { "location": -0.5, "value": -0.85, "derivative": 0.8 },
+            { "location": 0.0, "value": -0.45, "derivative": 0.775 },
+            { "location": 0.4, "value": -0.15, "derivative": 0.71 },
+            { "location": 0.8, "value": 0.12, "derivative": 0.675 }
+          ]
+        }
+      }
+    }
+  }
+}
