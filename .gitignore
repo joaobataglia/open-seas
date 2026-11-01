@@ -30,3 +30,8 @@ runs
 tools/preview/*.png
 tools/preview/.venv
 __pycache__
+
+# placeholder icon and its generator, kept local; remove the two png lines when the real icon is in
+tools/icon
+common/src/main/resources/assets/openseas/icon.png
+common/src/main/resources/resourcepacks/open_seas/pack.png

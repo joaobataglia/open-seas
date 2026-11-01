@@ -17,8 +17,9 @@ Next steps: `TODO.md`.
 - Publishing metadata (version, author, license, description, repo URL) is in `gradle.properties` and expanded into
   `fabric.mod.json`, `neoforge.mods.toml` and `pack.mcmeta`. `README.md` doubles as the Modrinth/CurseForge
   description; release notes go in `CHANGELOG.md`.
-- The icon (mod icon and the built-in pack's `pack.png`) is drawn by `tools/icon/make_icon.py` from a character grid:
-  edit it and rerun to change both.
+- The icon is `assets/openseas/icon.png` (both loaders' metadata point there) and the built-in pack's `pack.png`.
+  The current one is a local placeholder (git-ignored, with its generator in `tools/icon/`) until the real icon is
+  drawn.
 - The dev Fabric Loader must be >= 0.19 for test mods that ship `classTweaker v2` access wideners (Tectonic,
   Lithostitched). `fabric.mod.json` pins the runtime requirement separately (`>=0.15`).
 
