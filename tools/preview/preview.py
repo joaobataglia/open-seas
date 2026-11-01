@@ -22,7 +22,8 @@ from mcnoise import NormalNoise
 HERE = os.path.dirname(os.path.abspath(__file__))
 MOD_DATA = os.path.normpath(os.path.join(HERE, "../../common/src/main/resources/data"))
 VANILLA_JAR = os.path.expanduser("~/.gradle/caches/fabric-loom/1.21.1/minecraft-client.jar")
-CONTINENTS = "minecraft:overworld/continents"
+VANILLA_CONTINENTS = "minecraft:overworld/continents"
+MOD_CONTINENTS = "openseas:continents"  # the mod rebinds vanilla's continents to this at runtime
 
 # continentalness bands used by vanilla biome placement (upper bound, colour)
 BANDS = [
@@ -180,17 +181,17 @@ def main():
     bpp = args.size / args.px
     ax = (np.arange(args.px) - args.px / 2) * bpp
     x, z = np.meshgrid(ax, ax)
-    rows = [("mod", True)] + ([] if args.no_vanilla else [("vanilla", False)])
+    rows = [("mod", True, MOD_CONTINENTS)] + ([] if args.no_vanilla else [("vanilla", False, VANILLA_CONTINENTS)])
 
     pad = 22
     canvas = Image.new("RGB", (len(args.seeds) * args.px, len(rows) * (args.px + pad)), (255, 255, 255))
     draw = ImageDraw.Draw(canvas)
-    for r, (name, use_mod) in enumerate(rows):
+    for r, (name, use_mod, continents) in enumerate(rows):
         data = DataSource(use_mod)
         draw.text((4, r * (args.px + pad) + 4),
                   f"{name}  ({args.size} x {args.size} blocks per tile, origin at centre, seeds {args.seeds})", fill=(0, 0, 0))
         for s, seed in enumerate(args.seeds):
-            c = Evaluator(seed, data).eval(CONTINENTS, x, z)
+            c = Evaluator(seed, data).eval(continents, x, z)
             print(f"{name:8s} seed {seed}: {stats(c, bpp)}")
             canvas.paste(Image.fromarray(colorize(c)), (s * args.px, r * (args.px + pad) + pad))
     canvas.save(args.out)

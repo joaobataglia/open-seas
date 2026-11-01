@@ -4,7 +4,8 @@ import com.capitaojob.openseas.platform.Services;
 
 // Shared between all loaders: only vanilla code, vanilla's libraries and the Services abstraction may be used here.
 // Loader-specific concepts (NeoForge events, Fabric callbacks) belong in the loader projects.
-// The terrain itself is pure data for now: see data/minecraft/worldgen/density_function/overworld/continents.json.
+// The terrain itself is data (data/openseas/worldgen/density_function/continents.json); worldgen.ContinentsReplacer
+// wires it in place of vanilla's and other mods' continentalness.
 public class CommonClass {
 
     public static void init() {

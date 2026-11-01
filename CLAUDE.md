@@ -11,14 +11,29 @@ Next steps: `TODO.md`.
 - `./gradlew :fabric:runClient`, `./gradlew :neoforge:runClient`.
 - Build setup is copied from `../temperaments-1.21.1` (MultiLoader template): Gradle 9.2.1 because the host JDK is 25,
   Loom 1.13.6, ModDevGradle 2.0.141, mod code targets Java 21 via toolchain.
-- One jar for both loaders only works while the mod is data-only; Fabric runs on intermediary names and NeoForge on
-  Mojang names, so any Java touching Minecraft classes needs per-loader jars.
+- The jars are per loader: the mod has mixins, and Fabric runs on intermediary names while NeoForge runs on Mojang
+  names. Common mixins are written against Mojang names; Loom remaps them statically for the Fabric jar.
 - Fabric needs Fabric API at runtime: it is what loads data from mod jars.
+- The dev Fabric Loader must be >= 0.19 for test mods that ship `classTweaker v2` access wideners (Tectonic,
+  Lithostitched). `fabric.mod.json` pins the runtime requirement separately (`>=0.15`).
 
 ## How the terrain works
-- Everything is data in `common/src/main/resources/data/`. It overrides `minecraft:overworld/continents`, the one
+- The island layout is data: `openseas:continents` in `common/src/main/resources/data/`. Continentalness is the one
   value that both the terrain shape splines (offset/factor/jaggedness) and biome placement read, so biomes and coasts
   stay consistent and biome mods (TerraBlender etc.) keep working.
+- `worldgen/ContinentsReplacer` (called from `RegistryDataLoaderMixin` once worldgen data has loaded) rebinds every
+  density function `openseas:replace/<ns>/<path>` onto `<ns>:<path>`, if that id exists. All references to a density
+  function share one `Holder.Reference`, so this reroutes the router, the terrain splines and the biome sampler at
+  once, regardless of load order. A replacement must not reference its own target (it would loop).
+  - `replace/minecraft/overworld/continents` (Default, Amplified) and `replace/minecraft/overworld_large_biomes/
+    continents`: `add(openseas:continents, 0)`. A density function file cannot be a bare `"ns:id"` reference (the
+    registry codec only takes a number or an object), hence the add.
+  - `replace/tectonic/noise/raw_continents`: Tectonic replaces the whole overworld noise settings and its terrain
+    splines read `raw_continents`, not the router's continents. Its `island_selector` turns raw values in [-1, -0.5)
+    into Tectonic islands, so this is `max(openseas:continents, -0.49)` (what Tectonic's own `disable_islands` does);
+    -0.49 is still deep ocean for biomes, and Tectonic's depth spline is flat below -0.45.
+  - Adding support for another terrain mod: find the density function its terrain splines read for continentalness
+    and add a `replace/` file for it.
 - `continents = clamp(-1, 1, island_shape(warped) + spline(archipelago_mask) + islets * spline(islet_mask)
   + spline(big_island_mask))`
   - `openseas:island_shape`: island outlines, sampled at xz_scale 0.18. Coarse octaves weighted up so islands come out
@@ -38,12 +53,12 @@ Next steps: `TODO.md`.
   - Preview targets (per 16x16km): ~16% land, ~27 islands 1-2km long, ~8 over 2km, max ~3-5km.
 - Vanilla continentalness bands: mushroom < -1.05 < deep ocean < -0.455 < ocean < -0.19 < coast < -0.11 < near inland
   < 0.03 < mid inland < 0.3 < far inland.
-- Only the Default (and Amplified) presets read `minecraft:overworld/continents`; Large Biomes has its own file.
-- Data overrides apply to every world, so adding the mod to an existing world leaves seams at the old chunk border.
-- Terrain mods that override the same file (Tectonic, survival-islands) conflict; load order decides who wins.
+- The replacement applies to every world, so adding the mod to an existing world leaves seams at the old chunk border.
+- survivalisland is a separate world preset with its own noise settings and a custom density function type, so it is
+  not affected (its mixin only captures the seed).
 
 ## Previewing changes without launching the game
-`tools/preview/preview.py` evaluates the mod's `continents.json` (supported subset: add/mul/min/max/clamp/abs/
+`tools/preview/preview.py` evaluates `openseas:continents` (supported subset: add/mul/min/max/clamp/abs/
 constant/caches/noise/shifted_noise/shift_a/shift_b/spline) with a port of Minecraft's noise, renders mod vs vanilla
 maps and prints land % and island size counts. Seeds do not match the game. Needs numpy + pillow
 (`python -m venv tools/preview/.venv && tools/preview/.venv/bin/pip install -r tools/preview/requirements.txt`).
