@@ -35,6 +35,8 @@ BANDS = [
     (0.30, (80, 160, 70)),     # mid inland
     (9e9, (40, 110, 50)),      # far inland
 ]
+LAND_BANDS = [("coast", -0.19, -0.11), ("near", -0.11, 0.03), ("mid", 0.03, 0.30), ("far", 0.30, 9e9)]
+SPAWN_MIN = -0.11  # vanilla's spawn search targets near inland and up
 
 
 class DataSource:
@@ -67,6 +69,8 @@ class Evaluator:
         return self.noises[ident]
 
     def eval(self, df, x, z):
+        # full_like/empty_like below inherit the coordinates' dtype: integer coordinates would truncate every value
+        x, z = np.asarray(x, np.float64), np.asarray(z, np.float64)
         if isinstance(df, (int, float)):
             return np.full_like(x, float(df))
         if isinstance(df, str):
@@ -158,15 +162,20 @@ def island_areas(land, bpp):
     return sorted(sizes, reverse=True)
 
 
-def stats(c, bpp):
+def stats(c, bpp, dist):
     land = c >= -0.19  # coast band and above is dry land
     diam = [2 * np.sqrt(a / np.pi) for a in island_areas(land, bpp)]
     small = sum(d < 300 for d in diam)
     med = sum(300 <= d < 1500 for d in diam)
     big = sum(d >= 1500 for d in diam)
     top = ", ".join(f"{d:.0f}" for d in diam[:5])
+    bands = "  ".join(f"{name} {((c >= lo) & (c < hi)).sum() / max(land.sum(), 1) * 100:2.0f}%"
+                      for name, lo, hi in LAND_BANDS)
+    spawnable = c >= SPAWN_MIN
+    spawn = f"{dist[spawnable].min():.0f}b" if spawnable.any() else "none in view"
     return (f"land {land.mean() * 100:4.1f}%  islands {len(diam):3d} "
-            f"(<300b: {small}, 300-1500b: {med}, >1500b: {big})  largest diameters: {top}")
+            f"(<300b: {small}, 300-1500b: {med}, >1500b: {big})  largest diameters: {top}\n"
+            f"{'':17s}land by band: {bands}  nearest spawnable land: {spawn}")
 
 
 def main():
@@ -181,6 +190,7 @@ def main():
     bpp = args.size / args.px
     ax = (np.arange(args.px) - args.px / 2) * bpp
     x, z = np.meshgrid(ax, ax)
+    dist = np.hypot(x, z)
     rows = [("mod", True, MOD_CONTINENTS)] + ([] if args.no_vanilla else [("vanilla", False, VANILLA_CONTINENTS)])
 
     pad = 22
@@ -192,7 +202,7 @@ def main():
                   f"{name}  ({args.size} x {args.size} blocks per tile, origin at centre, seeds {args.seeds})", fill=(0, 0, 0))
         for s, seed in enumerate(args.seeds):
             c = Evaluator(seed, data).eval(continents, x, z)
-            print(f"{name:8s} seed {seed}: {stats(c, bpp)}")
+            print(f"{name:8s} seed {seed}: {stats(c, bpp, dist)}")
             canvas.paste(Image.fromarray(colorize(c)), (s * args.px, r * (args.px + pad) + pad))
     canvas.save(args.out)
     print("saved", os.path.abspath(args.out))

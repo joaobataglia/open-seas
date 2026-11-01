@@ -32,6 +32,8 @@ neoForge {
         }
         server {
             server()
+            // Own directory, so a server world and the client's test mods in run/ stay separate
+            gameDirectory = project.file('runs/server')
         }
     }
     mods {

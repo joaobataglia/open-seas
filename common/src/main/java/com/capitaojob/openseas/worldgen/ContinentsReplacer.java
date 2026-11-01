@@ -8,6 +8,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.level.levelgen.DensityFunctions;
 
 import java.util.Map;
 
@@ -16,10 +17,13 @@ import java.util.Map;
 // supporting another terrain mod is a data file, and load order does not matter.
 // Every reference to a density function shares one Holder.Reference, so rebinding its value reroutes all of them
 // (noise router, terrain splines, biome sampler) at once.
-// A replacement must not reference its own target: the target now resolves to the replacement, which would loop.
+// A replacement must not reference its own target (directly or through other replacements): the target would resolve
+// to the replacement and loop. Such replacements are skipped with an error instead of overflowing the stack in worldgen.
 public final class ContinentsReplacer {
 
     private static final String PREFIX = "replace/";
+    // Stands in for a target while its replacement is searched for references to it; matched by identity.
+    private static final DensityFunction PROBE = DensityFunctions.constant(0.0);
 
     private ContinentsReplacer() {
     }
@@ -43,10 +47,28 @@ public final class ContinentsReplacer {
             ResourceLocation targetId = ResourceLocation.fromNamespaceAndPath(target.substring(0, slash), target.substring(slash + 1));
             registry.getHolder(ResourceKey.create(Registries.DENSITY_FUNCTION, targetId)).ifPresentOrElse(
                     holder -> {
-                        ((HolderReferenceAccessor) (Object) holder).openseas$bindValue(entry.getValue());
+                        HolderReferenceAccessor binding = (HolderReferenceAccessor) (Object) holder;
+                        DensityFunction original = holder.value();
+                        binding.openseas$bindValue(PROBE);
+                        if (references(entry.getValue(), PROBE)) {
+                            binding.openseas$bindValue(original);
+                            Constants.LOG.error("Ignoring {}: it references {}, its own target, which would loop", id, targetId);
+                            return;
+                        }
+                        binding.openseas$bindValue(entry.getValue());
                         Constants.LOG.info("Replaced density function {} with {}", targetId, id);
                     },
                     () -> Constants.LOG.debug("Skipping {}: {} is not loaded", id, targetId));
         }
+    }
+
+    // mapAll walks the whole tree, following holder references into their current values.
+    private static boolean references(DensityFunction function, DensityFunction probe) {
+        boolean[] found = {false};
+        function.mapAll(node -> {
+            found[0] |= node == probe;
+            return node;
+        });
+        return found[0];
     }
 }

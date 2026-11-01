@@ -24,7 +24,9 @@ Next steps: `TODO.md`.
 - `worldgen/ContinentsReplacer` (called from `RegistryDataLoaderMixin` once worldgen data has loaded) rebinds every
   density function `openseas:replace/<ns>/<path>` onto `<ns>:<path>`, if that id exists. All references to a density
   function share one `Holder.Reference`, so this reroutes the router, the terrain splines and the biome sampler at
-  once, regardless of load order. A replacement must not reference its own target (it would loop).
+  once, regardless of load order. A replacement must not reference its own target, directly or through other
+  replacements (it would loop): the replacer checks by binding a probe to the target and walking the replacement with
+  `mapAll`, and skips it with an error.
   - `replace/minecraft/overworld/continents` (Default, Amplified) and `replace/minecraft/overworld_large_biomes/
     continents`: `add(openseas:continents, 0)`. A density function file cannot be a bare `"ns:id"` reference (the
     registry codec only takes a number or an object), hence the add.
@@ -33,7 +35,14 @@ Next steps: `TODO.md`.
     into Tectonic islands, so this is `max(openseas:continents, -0.49)` (what Tectonic's own `disable_islands` does);
     -0.49 is still deep ocean for biomes, and Tectonic's depth spline is flat below -0.45.
   - Adding support for another terrain mod: find the density function its terrain splines read for continentalness
-    and add a `replace/` file for it.
+    and add a `replace/` file for it to the pack.
+- Everything that changes the world lives in a built-in data pack, `common/src/main/resources/resourcepacks/
+  open_seas/` (registered by each loader's `OpenSeas`: Fabric `ResourceManagerHelper`, NeoForge
+  `AddPackFindersEvent`). It is added automatically to new and existing worlds and can be turned off per world, which
+  gives vanilla terrain. `openseas:continents` and its noises stay in the jar's main data (unused without the pack).
+  - The `replace/` functions above.
+  - `minecraft:ocean_monuments`: spacing 80 / separation 24 instead of 32 / 5 (~1/6 the density). With ~84% ocean,
+    mostly deep, vanilla spacing put a monument every ~500 blocks of sailing.
 - `continents = clamp(-1, 1, island_shape(warped) + spline(archipelago_mask) + islets * spline(islet_mask)
   + spline(big_island_mask))`
   - `openseas:island_shape`: island outlines, sampled at xz_scale 0.18. Coarse octaves weighted up so islands come out
@@ -60,7 +69,8 @@ Next steps: `TODO.md`.
 ## Previewing changes without launching the game
 `tools/preview/preview.py` evaluates `openseas:continents` (supported subset: add/mul/min/max/clamp/abs/
 constant/caches/noise/shifted_noise/shift_a/shift_b/spline) with a port of Minecraft's noise, renders mod vs vanilla
-maps and prints land % and island size counts. Seeds do not match the game. Needs numpy + pillow
+maps and prints land %, island size counts, land share per continentalness band and the distance from the origin to
+the nearest land vanilla's spawn search accepts. Seeds do not match the game. Needs numpy + pillow
 (`python -m venv tools/preview/.venv && tools/preview/.venv/bin/pip install -r tools/preview/requirements.txt`).
 Reads vanilla data from Loom's cached `minecraft-client.jar`.
 
