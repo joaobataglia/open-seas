@@ -1,6 +1,6 @@
 # TODO
 
-## Before publishing 0.1.0
+## Before publishing 1.0.0
 - [ ] Screenshots for the Modrinth/CurseForge page.
 
 ## Next
