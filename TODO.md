@@ -1,7 +1,8 @@
 # TODO
 
 ## Before publishing 0.1.0
-- [ ] Final icon (`assets/openseas/icon.png` + the pack's `pack.png`; un-ignore them in `.gitignore`) and screenshots for the Modrinth/CurseForge page.
+- [ ] Final icon (`assets/openseas/icon.png` + the pack's `pack.png`; un-ignore them in `.gitignore`) and
+      screenshots for the Modrinth/CurseForge page.
 
 ## Next
 - [ ] Config: island size, sea amount, archipelago scale. On/off per world is the built-in pack; variants could be
