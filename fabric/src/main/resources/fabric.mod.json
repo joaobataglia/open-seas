@@ -7,7 +7,13 @@
     "authors": [
         "${mod_author}"
     ],
+    "contact": {
+        "homepage": "${repo_url}",
+        "sources": "${repo_url}",
+        "issues": "${repo_url}/issues"
+    },
     "license": "${license}",
+    "icon": "assets/${mod_id}/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [

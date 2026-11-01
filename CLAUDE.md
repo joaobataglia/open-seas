@@ -14,6 +14,11 @@ Next steps: `TODO.md`.
 - The jars are per loader: the mod has mixins, and Fabric runs on intermediary names while NeoForge runs on Mojang
   names. Common mixins are written against Mojang names; Loom remaps them statically for the Fabric jar.
 - Fabric needs Fabric API at runtime: it is what loads data from mod jars.
+- Publishing metadata (version, author, license, description, repo URL) is in `gradle.properties` and expanded into
+  `fabric.mod.json`, `neoforge.mods.toml` and `pack.mcmeta`. `README.md` doubles as the Modrinth/CurseForge
+  description; release notes go in `CHANGELOG.md`.
+- The icon (mod icon and the built-in pack's `pack.png`) is drawn by `tools/icon/make_icon.py` from a character grid:
+  edit it and rerun to change both.
 - The dev Fabric Loader must be >= 0.19 for test mods that ship `classTweaker v2` access wideners (Tectonic,
   Lithostitched). `fabric.mod.json` pins the runtime requirement separately (`>=0.15`).
 

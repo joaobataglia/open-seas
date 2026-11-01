@@ -1,11 +1,9 @@
 # TODO
 
-- [ ] In-game check of the runtime replacement: vanilla on both loaders, Tectonic on Fabric (log should say
-      "Replaced density function ..."), Large Biomes preset.
-- [ ] In-game check of the built-in `open_seas` data pack: listed and on in Create World -> Data Packs (both
-      loaders), monuments sparser on NeoForge. Already checked on dev servers: auto-enabled, replacements and loop
-      guard on both loaders; sparser monuments and turning it off (stays off after restart) on Fabric. The NeoForge
-      dev server ignores console input, so commands there need a client.
+## Before publishing 0.1.0
+- [ ] Final icon (placeholder from `tools/icon/make_icon.py`) and screenshots for the Modrinth/CurseForge page.
+
+## Next
 - [ ] Config: island size, sea amount, archipelago scale. On/off per world is the built-in pack; variants could be
       more built-in packs (off by default) that override `openseas:continents` or its noises.
 
@@ -21,6 +19,9 @@
   Levers: `island_shape` bias (interior height), the `big_island_mask` boost.
 
 ## Done
+- [x] In-game check of the runtime replacement (both loaders, Tectonic, Large Biomes) and the built-in `open_seas`
+      data pack.
+- [x] License (MIT) and publishing metadata.
 - [x] Spawn in open sea: never happened in play; preview shows spawnable land within ~1.4km of the origin.
 - [x] In-game check of the data-only version (Fabric).
 - [x] "Far lands"-like spots: gone after the island rework.
